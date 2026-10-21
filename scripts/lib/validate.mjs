@@ -10,6 +10,7 @@ export async function validateProduct({rootDir,registry,app}) {
   const prefix=`${registry.site.basePath}${app.slug}/`; let links=0;
   async function markup(file) {if(!htmlCache.has(file)) htmlCache.set(file,scanHtml(await readFile(join(rootDir,file),'utf8')));return htmlCache.get(file);}
   async function check(value,from) {
+    if(/^mailto:/i.test(value) && new URL(value).pathname!=='razeappdev@gmail.com') throw new Error(`Unexpected contact email in ${from}`);
     if(!value || /^(?:mailto:|tel:|data:)/i.test(value)) return;
     const url=new URL(value,`${registry.site.origin}${prefix}${from}`);
     if(url.origin!==registry.site.origin) {if(url.protocol!=='https:') throw new Error(`Unsupported URL: ${value}`);return;}
@@ -24,6 +25,7 @@ export async function validateProduct({rootDir,registry,app}) {
   for(const file of files) {
     if(file.endsWith('.html')) {
       const html=await readFile(join(rootDir,file),'utf8');
+      if([...html.matchAll(/[\w.+-]+@gmail\.com/gi)].some(match=>match[0]!=='razeappdev@gmail.com')) throw new Error(`Unexpected contact email in ${file}`);
       for(const ref of references(html)) await check(ref.value,file);
       const ids=(await markup(file)).ids;
       if(new Set(ids).size!==ids.length) throw new Error(`Duplicate IDs in ${file}`);

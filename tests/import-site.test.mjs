@@ -50,3 +50,10 @@ test('missing CSS dependencies and fragments fail',async()=>{
   await writeFile(join(f.sourceDir,'privacy.html'),'<a href="index.html#missing">Home</a>');
   await assert.rejects(importSite({...f,slug:'razestore'}),/fragment/i);
 });
+test('outdated contact emails are rejected before export',async()=>{
+  const f=await fixture();
+  for(const html of ['<a href="mailto:old@example.com">Contact</a>','<p>Old contact: razedevworkspace@gmail.com</p>']) {
+    await writeFile(join(f.sourceDir,'privacy.html'),html);
+    await assert.rejects(importSite({...f,slug:'razestore'}),/contact email/i);
+  }
+});
