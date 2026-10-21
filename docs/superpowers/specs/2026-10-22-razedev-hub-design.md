@@ -1,11 +1,16 @@
 # RazeDev hub and independent product websites
 
 Date: 2026-10-22 (Asia/Tokyo)
-Status: Approved by the user on 2026-10-22; implementation plan awaiting review.
+Status: Approved by the user on 2026-10-22; Native implementation authorized.
 
 The user also confirmed that Vue or another framework is allowed. The initial
 implementation keeps the approved static approach because the hub needs no
 client-side application state; this is a design choice, not a user restriction.
+
+Later user instruction: all website contact email addresses use
+`razeappdev@gmail.com`, including source templates, privacy pages, and guide
+generation. This explicit contact update overrides the original requirement to
+preserve support addresses; other policy wording and revision dates are retained.
 
 ## Purpose and agreed requirements
 
