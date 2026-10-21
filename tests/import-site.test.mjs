@@ -33,6 +33,17 @@ test('symlinks in file and parent paths are rejected',async()=>{
     await assert.rejects(importSite({...f,slug:'razestore'}),/symlink/i);
   }
 });
+test('symlinks above source and destination roots reject before changing either app',async()=>{
+  for(const which of ['sourceDir','repoDir']) {
+    const f=await fixture();await importSite({...f,slug:'razetag'});await importSite({...f,slug:'razestore'});
+    const before=await snapshotTree(join(f.repoDir,'public'));
+    await writeFile(join(f.sourceDir,'privacy.html'),'<p>A different policy</p>');
+    await symlink(f.root,join(f.root,'linked-parent'));
+    const aliased=join(f.root,'linked-parent',which==='sourceDir'?'source':'repo');
+    await assert.rejects(importSite({...f,[which]:aliased,slug:'razestore'}),/symlink/i);
+    assert.deepEqual(await snapshotTree(join(f.repoDir,'public')),before);
+  }
+});
 test('cross-app and hub links fail without replacing previous output',async()=>{
   const f=await fixture(); await importSite({...f,slug:'razestore'}); const before=await snapshotTree(join(f.repoDir,'public'));
   for(const target of ['https://remyo.github.io/razedev/','https://remyo.github.io/razedev/razetag/home/']) {

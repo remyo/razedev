@@ -1,4 +1,4 @@
-import {readdir,readFile,mkdir,mkdtemp,writeFile} from 'node:fs/promises';
+import {readdir,readFile,mkdir,mkdtemp,writeFile,realpath} from 'node:fs/promises';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {tmpdir} from 'node:os';
@@ -14,7 +14,7 @@ export async function snapshotTree(dir) {
   await walk(dir); return result;
 }
 export async function fixture() {
-  const root=await mkdtemp(join(tmpdir(),'razedev-test-')),repoDir=join(root,'repo'),sourceDir=join(root,'source');
+  const root=await mkdtemp(join(await realpath(tmpdir()),'razedev-test-')),repoDir=join(root,'repo'),sourceDir=join(root,'source');
   await mkdir(repoDir); await mkdir(join(sourceDir,'assets'),{recursive:true});
   const makeApp=slug=>({slug,name:slug,description:'A useful app',accent:'#123456',icon:'assets/icon.png',legacyBaseUrl:`https://remyo.github.io/${slug}_old/`,pages:{'index.html':'home','privacy.html':'privacy'},assets:['assets/icon.png','assets/site.css']});
   const registry={site:{origin:'https://remyo.github.io',basePath:'/razedev/'},apps:[makeApp('razetag'),makeApp('razestore')]};

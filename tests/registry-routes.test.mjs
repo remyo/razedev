@@ -27,6 +27,13 @@ test('sharing metadata moves from old absolute URLs',()=>{
   assert.match(result,/content="https:\/\/remyo.github.io\/razedev\/razestore\/home\/"/);
   assert.match(result,/content="https:\/\/remyo.github.io\/razedev\/razestore\/assets\/brand\/app-icon.png"/);
 });
+test('legacy root query and fragment links resolve to home from privacy',()=>{
+  for(const suffix of ['?v=1','#features','?v=1#features']) {
+    const html=`<a href="${app.legacyBaseUrl}${suffix}">Home</a>`;
+    assert.equal(rewritePage(html,{registry,app,sourcePage:'privacy.html'}),`<a href="https://remyo.github.io/razedev/razestore/home/${suffix}">Home</a>`);
+  }
+  assert.equal(rewritePage('<a href="?v=1">This policy</a>',{registry,app,sourcePage:'privacy.html'}),'<a href="../privacy/?v=1">This policy</a>');
+});
 test('unlisted references and traversal are rejected',()=>{
   for(const href of ['missing.html','../private.html','%2e%2e/private.html']) assert.throws(()=>rewritePage(`<a href="${href}">x</a>`,{registry,app,sourcePage:'index.html'}));
 });

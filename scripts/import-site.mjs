@@ -3,17 +3,19 @@ import {join,dirname,resolve} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {readRegistry} from './lib/registry.mjs';
 import {rewritePage,renderRedirect} from './lib/routes.mjs';
-import {regularFile,isWithin,replaceDirectory,treeDigest} from './lib/files.mjs';
+import {regularFile,isWithin,replaceDirectory,treeDigest,assertNoSymlinkPath} from './lib/files.mjs';
 import {validateProduct} from './lib/validate.mjs';
 
 export async function importSite({repoDir,sourceDir,slug}) {
   repoDir=resolve(repoDir); sourceDir=resolve(sourceDir);
+  await assertNoSymlinkPath(repoDir);await assertNoSymlinkPath(sourceDir);
   const registry=await readRegistry(repoDir),app=registry.apps.find(app=>app.slug===slug);
   if(!app) throw new Error(`Unknown app: ${slug}`);
   if((await lstat(sourceDir)).isSymbolicLink()) throw new Error('Symlink source rejected');
   const sourceReal=await realpath(sourceDir),repoReal=await realpath(repoDir);
   if(isWithin(sourceReal,repoReal) || isWithin(repoReal,sourceReal)) throw new Error('Source and destination overlap');
   const publicRoot=join(repoDir,'public'),destination=join(publicRoot,slug);
+  await assertNoSymlinkPath(destination,{allowMissing:true});
   await mkdir(publicRoot,{recursive:true});
   if((await lstat(publicRoot)).isSymbolicLink()) throw new Error('Symlink destination rejected');
   for(const file of [...app.assets,...Object.keys(app.pages)]) await regularFile(sourceDir,file);

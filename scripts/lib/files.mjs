@@ -1,7 +1,16 @@
 import {lstat,readdir,readFile,mkdir,rename,rm} from 'node:fs/promises';
-import {join,dirname,resolve,sep} from 'node:path';
+import {join,dirname,resolve,sep,parse} from 'node:path';
 import {createHash} from 'node:crypto';
+export async function assertNoSymlinkPath(value,{allowMissing=false}={}) {
+  const absolute=resolve(value),root=parse(absolute).root;let current=root;
+  for(const part of absolute.slice(root.length).split(sep).filter(Boolean)) {
+    current=join(current,part);let info;
+    try {info=await lstat(current);} catch(error) {if(allowMissing && error.code==='ENOENT') return;throw error;}
+    if(info.isSymbolicLink()) throw new Error(`Symlink path rejected: ${current}`);
+  }
+}
 export async function regularFile(root,relative) {
+  await assertNoSymlinkPath(root);
   let path=resolve(root);
   if((await lstat(path)).isSymbolicLink()) throw new Error('Symlink root rejected');
   for(const part of relative.split('/')) {
@@ -13,6 +22,7 @@ export async function regularFile(root,relative) {
   return path;
 }
 export async function fileList(root) {
+  await assertNoSymlinkPath(root);
   if((await lstat(root)).isSymbolicLink()) throw new Error('Symlink root rejected');
   const files=[];
   async function walk(dir,prefix='') {

@@ -11,7 +11,7 @@ export function rewritePage(html,{registry,app,sourcePage}) {
     else if(/^(?:[a-z][\w+.-]*:|\/\/)/i.test(value)) return value;
     const suffix=value.match(/[?#].*$/)?.[0] || '';
     let pathname=decodeURIComponent(value.slice(0,value.length-suffix.length));
-    if(pathname==='') pathname=sourcePage;
+    if(pathname==='') pathname=wasLegacy?'index.html':sourcePage;
     if(pathname.startsWith('/') || pathname.split('/').includes('..') || pathname.includes('\\')) throw new Error(`Unsafe reference: ${input}`);
     pathname=posix.normalize(pathname); if(pathname==='.') pathname='index.html';
     let target;
