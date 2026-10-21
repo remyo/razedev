@@ -34,3 +34,24 @@ export async function validateProduct({rootDir,registry,app}) {
   }
   return {htmlPages:files.filter(x=>x.endsWith('.html')).length,assets:app.assets.length,links};
 }
+export async function validateSite({rootDir,registry}) {
+  const report={htmlPages:2,assets:1,links:0};
+  const expected=['index.html','404.html','assets/hub.css','.nojekyll'];
+  for(const app of registry.apps) {
+    const appRoot=join(rootDir,app.slug),result=await validateProduct({rootDir:appRoot,registry,app});
+    for(const key of Object.keys(report)) report[key]+=result[key];
+    expected.push(...(await fileList(appRoot)).map(file=>`${app.slug}/${file}`));
+  }
+  if(JSON.stringify((await fileList(rootDir)).sort())!==JSON.stringify(expected.sort())) throw new Error('Unexpected deployment files');
+  const hub=await readFile(join(rootDir,'index.html'),'utf8'),ids=scanHtml(hub).ids;
+  for(const ref of references(hub)) {
+    const url=new URL(ref.value,`${registry.site.origin}${registry.site.basePath}`);
+    if(url.origin!==registry.site.origin || !url.pathname.startsWith(registry.site.basePath)) throw new Error('Hub link outside site');
+    let path=decodeURIComponent(url.pathname.slice(registry.site.basePath.length));if(!path || path.endsWith('/')) path+='index.html';
+    if(!expected.includes(path)) throw new Error(`Missing hub reference: ${ref.value}`);
+    if(url.hash && path==='index.html' && !ids.includes(url.hash.slice(1))) throw new Error('Missing hub fragment');
+    report.links++;
+  }
+  if(scanHtml(await readFile(join(rootDir,'404.html'),'utf8')).tags.some(tag=>tag.name==='a')) throw new Error('404 must not offer app navigation');
+  return report;
+}

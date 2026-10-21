@@ -13,6 +13,7 @@ export async function regularFile(root,relative) {
   return path;
 }
 export async function fileList(root) {
+  if((await lstat(root)).isSymbolicLink()) throw new Error('Symlink root rejected');
   const files=[];
   async function walk(dir,prefix='') {
     for(const entry of await readdir(dir,{withFileTypes:true})) {
