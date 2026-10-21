@@ -187,7 +187,7 @@ The tasks form one publication feature: registry/URLs → importer → assembled
 
 - [x] **Step 1: Write the operating instructions.** Include exact local import/build/preview/check commands, repository responsibilities, routes and navigation boundary, manual publication, the single public-destination token scope and private secret name, and GitHub Pages' Actions setting. Explain adding a registry app/manifest/workflow without adding global links inside product pages. Clarify that snapshots are generated and should be edited in their private source. Keep old Pages deployments until policy-link cutover is separately resolved; making an old repository private is not proof old addresses continue working.
 - [x] **Step 2: Perform final review.** Use `superpowers:requesting-code-review` and the selected execution method's review process. Confirm all approved spec requirements map to completed checks; resolve actionable findings and repeat only affected checks. Complete a final `git diff --check` in changed checkouts and confirm the committed exports match the final source fix and manifests. No new tests are needed merely to mirror documentation.
-- [ ] **Step 3: Hand off the preview and actual status.** Open the built hub and representative isolated product page in Codex. Report test results, commit/worktree locations, and remaining remote setup: token secrets, pushing reviewed changes, Pages configuration, visibility verification, and old-link cutover. State explicitly whether anything was deployed; local checks do not establish remote deployment success.
+- [x] **Step 3: Hand off the preview and actual status.** Open the built hub and representative isolated product page in Codex. Report test results, commit/worktree locations, and remaining remote setup: token secrets, pushing reviewed changes, Pages configuration, visibility verification, and old-link cutover. State explicitly whether anything was deployed; local checks do not establish remote deployment success.
 
 ## Plan review and execution choice
 
@@ -199,3 +199,12 @@ The user approved this plan and selected **Native execution**. Implement in this
 - [Checkout action](https://github.com/actions/checkout) and [setup-node action](https://github.com/actions/setup-node)
 - [Workflow token scope and triggering behavior](https://docs.github.com/en/actions/concepts/security/github_token)
 - [GitHub workflow concurrency](https://docs.github.com/en/actions/concepts/workflows-and-actions/concurrency)
+
+## Local delivery evidence
+
+- Native implementation completed and independently reviewed. Both Important review findings (legacy root URL suffixes and ancestor symlink paths) have regression tests that failed before the fixes and pass afterward.
+- Final Node suite: 29/29. Browser suite after contact update: 41/41. RazeTag source suite: 172/172; RazeStore source suite: 15/15. All workflow files parsed as YAML.
+- Both product snapshots reimport with `changed: false` from the final source checkouts. All published contact emails use `razeappdev@gmail.com`.
+- RazeDev branch: `codex/razedev-hub`. RazeTag source branch: `codex/razedev-publishing`. RazeStore source branch: `codex/razedev-store-publishing` (also referenced by the managed worktree's detached HEAD).
+- Development checkouts are isolated worktrees. The native tool targets RazeStore; RazeDev and RazeTag use sibling worktrees, which require manual cleanup after integration.
+- No remote pushes, secrets, visibility changes, or live deployments were performed. Remote credentials, visibility, and live Pages availability remain unverified; production requires the README setup steps.
