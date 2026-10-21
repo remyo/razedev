@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123e34">
+  <title>Raze Store — A little help for your everyday tindahan</title>
+  <meta name="description" content="Meet Raze Store: an offline-first companion for Filipino sari-sari stores. Look up prices, build a cart, keep sales records, and share receipts.">
+  <meta property="og:title" content="Raze Store — Your everyday tindahan, a little easier.">
+  <meta property="og:description" content="Product prices, checkout, receipts, and store records. Together in one simple, offline-first app.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="../assets/brand/app-icon.png" type="image/png">
+  <link rel="stylesheet" href="../assets/site.css">
+  <script src="../assets/site.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <nav class="nav-wrap container" aria-label="Main navigation">
+      <a class="brand" href="../home/" aria-label="Raze Store home"><img src="../assets/brand/app-icon.png" width="42" height="42" alt=""><span>Raze<span class="brand-light">Store</span><span class="brand-dot">.</span></span></a>
+      <div class="nav-links"><a href="#features">Features</a><a href="#app">Inside the app</a><a href="../privacy/">Privacy</a></div>
+      <a class="button button-small button-dark nav-contact" href="mailto:razeappdev@gmail.com">Say hello <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+  <main id="main">
+    <section class="hero container" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="eyebrow-line" aria-hidden="true"></span> For the everyday tindahan</p>
+        <h1 id="hero-title">Small store.<br>Big <em>peace<br class="desktop-break"> of mind.</em></h1>
+        <p class="hero-description">The price is no longer a guessing game. Keep your products, checkout, and daily records together—so anyone in the family can mind the store.</p>
+        <div class="hero-actions"><a class="button button-dark" href="#app">Take a look inside <span aria-hidden="true">↗</span></a><a class="text-link" href="#how-it-works">How it works <span aria-hidden="true">↓</span></a></div>
+        <div class="hero-notes"><span>Offline-first</span><span>No account needed</span><span>Made for sari-sari stores</span></div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-orbit" aria-hidden="true"></div>
+        <div class="floating-note"><span class="note-symbol" aria-hidden="true">✓</span><span>A little less guessing.<br><strong>A little more confidence.</strong></span></div>
+        <div class="phone phone-home"><img src="../assets/screenshots/home.png" width="1236" height="2460" alt="Raze Store's product catalog with photos, categories, and prices using sample store data" fetchpriority="high"></div>
+        <div class="phone phone-checkout"><img src="../assets/screenshots/checkout.png" width="1236" height="2460" alt="Raze Store checkout showing a sample cart, total, cash, and change" decoding="async"></div>
+        <span class="visual-caption">Real app screens · Sample store data</span>
+      </div>
+    </section>
+    <section class="intro-strip" aria-label="The Raze Store idea"><div class="container strip-inner"><p>More than a price list.<br><strong>A helping hand behind the counter.</strong></p><span class="strip-aside">From the first scan<br>to the last sale of the day.</span></div></section>
+    <section id="how-it-works" class="section container" aria-labelledby="how-title">
+      <div class="section-heading"><p class="eyebrow">A simpler store routine</p><h2 id="how-title">Scan. Sell. <em>Settle in.</em></h2><p>No complicated setup. Start with the products and prices you know.</p></div>
+      <div class="steps">
+        <article class="step"><span class="step-number">01 <span aria-hidden="true">↗</span></span><h3>Make it your store.</h3><p>Add your products and prices, or import a catalog pack. Set the price for a pack, a piece, or another selling unit.</p></article>
+        <article class="step"><span class="step-number">02 <span aria-hidden="true">↗</span></span><h3>Find it. Add it. Total it.</h3><p>Scan a barcode or search the catalog. Choose the right unit, adjust the quantity, and let the cart do the sums.</p></article>
+        <article class="step"><span class="step-number">03 <span aria-hidden="true">✓</span></span><h3>Keep a clear record.</h3><p>Complete the sale, share a receipt when asked, and look back at your sales. Back up your records along the way.</p></article>
+      </div>
+    </section>
+    <section id="app" class="app-section" aria-labelledby="app-title">
+      <div class="container app-layout">
+        <div class="app-copy"><p class="eyebrow">A closer look</p><h2 id="app-title">Everything has<br><em>its place.</em></h2><p class="app-intro">Familiar store tasks, with a little more order. Explore the actual app below.</p>
+          <div class="screen-tabs" role="tablist" aria-label="Explore Raze Store screens">
+            <button id="tab-products" class="screen-tab is-active" role="tab" aria-selected="true" aria-controls="screen-panel" tabindex="0" data-screen="products"><span>01</span> Products <span class="tab-arrow" aria-hidden="true">↗</span></button>
+            <button id="tab-checkout" class="screen-tab" role="tab" aria-selected="false" aria-controls="screen-panel" tabindex="-1" data-screen="checkout"><span>02</span> Checkout <span class="tab-arrow" aria-hidden="true">↗</span></button>
+            <button id="tab-gcash" class="screen-tab" role="tab" aria-selected="false" aria-controls="screen-panel" tabindex="-1" data-screen="gcash"><span>03</span> GCash records <span class="tab-arrow" aria-hidden="true">↗</span></button>
+            <button id="tab-sales" class="screen-tab" role="tab" aria-selected="false" aria-controls="screen-panel" tabindex="-1" data-screen="sales"><span>04</span> Sales history <span class="tab-arrow" aria-hidden="true">↗</span></button>
+            <button id="tab-receipts" class="screen-tab" role="tab" aria-selected="false" aria-controls="screen-panel" tabindex="-1" data-screen="receipts"><span>05</span> Receipts <span class="tab-arrow" aria-hidden="true">↗</span></button>
+          </div>
+          <noscript><p>Screen switching needs JavaScript. View the <a href="../assets/screenshots/checkout.png">checkout</a>, <a href="../assets/screenshots/gcash.png">GCash records</a>, <a href="../assets/screenshots/sales.png">sales</a>, or <a href="../assets/screenshots/receipt.png">receipt</a> screenshots directly.</p></noscript>
+        </div>
+        <div id="screen-panel" class="screen-panel" role="tabpanel" aria-labelledby="tab-products" tabindex="0">
+          <button class="screen-zoom" data-open-screen aria-label="Enlarge product catalog screenshot"><span class="phone gallery-phone"><img id="app-screen" src="../assets/screenshots/home.png" width="1236" height="2460" alt="The Raze Store product catalog, shown with sample products and prices" loading="lazy" decoding="async"></span><span class="zoom-label">Tap to take a closer look <span aria-hidden="true">↗</span></span></button>
+          <div class="screen-caption" aria-live="polite"><h3 id="screen-title">The right price, right there.</h3><p id="screen-description">Browse by category, search by name, or scan a barcode. Your store's product prices are always close at hand.</p></div>
+        </div>
+      </div>
+      <div class="container gallery-disclaimer">Actual app screens with demonstration data. GCash tools record transactions; they do not send money or verify payment.</div>
+    </section>
+    <section id="features" class="section container" aria-labelledby="features-title">
+      <div class="section-heading split-heading"><div><p class="eyebrow">Small details. Everyday difference.</p><h2 id="features-title">Built around<br><em>your kind of store.</em></h2></div><p>For the sachet, the piece, the suki, and the family member taking over for the afternoon.</p></div>
+      <div class="feature-grid">
+        <article class="feature"><span class="feature-label">Find the price</span><h3>A scan beats a guess.</h3><p>Keep product names, barcodes, photos, and your own selling prices in an easy-to-browse catalog.</p></article>
+        <article class="feature"><span class="feature-label">Sell your way</span><h3>Pack, piece, or sachet.</h3><p>Give one product different selling units and prices. Pick what the customer is actually buying.</p></article>
+        <article class="feature"><span class="feature-label">Make checkout lighter</span><h3>Less mental math.</h3><p>Add quantities, see the total, and calculate change. Save or share a receipt when your buyer needs one.</p></article>
+        <article class="feature"><span class="feature-label">Keep things separate</span><h3>Records that make sense.</h3><p>Grocery sales and GCash cash-in/cash-out records have their own spaces, so the details stay clear.</p></article>
+        <article class="feature"><span class="feature-label">Remember the little things</span><h3>Beyond the counter.</h3><p>Keep track of utang, repayments, and store expenses with tools made for everyday recordkeeping.</p></article>
+        <article class="feature"><span class="feature-label">Keep a copy</span><h3>Your catalog can travel.</h3><p>Import catalog packs, work with CSV files, and export backups. Review incoming products before changing your catalog.</p></article>
+      </div>
+    </section>
+    <section class="neighborhood container" aria-labelledby="neighborhood-title"><div class="brand-art"><img src="../assets/images/raze-store-3d.png" width="1024" height="1024" loading="lazy" decoding="async" alt="A soft 3D illustration of the friendly Raze Store shopping-bag icon"></div><div class="neighborhood-copy"><p class="eyebrow">Made for the neighborhood</p><h2 id="neighborhood-title">Because a store<br>is a <em>family thing.</em></h2><p>The owner can't always be behind the counter. Raze Store helps the person stepping in know the prices, ring up the right total, and leave a clear record.</p><p class="tagalog-note">Para sa tindahan.<br>Para sa pamilyang nagtutulungan.</p></div></section>
+    <section id="privacy" class="section container" aria-labelledby="privacy-title"><div class="privacy-card"><div><p class="eyebrow">Clear about your information</p><h2 id="privacy-title">Your store records<br><em>stay on your device.</em></h2></div><div class="privacy-copy"><p>No Raze Store account or developer-operated cloud sync. Your store database and photos are kept locally, and you choose what to export or share.</p><p class="small-copy">Backups, sharing destinations, and Google's ML Kit diagnostics have their own considerations. Our policy explains these details without the guesswork.</p><a class="text-link" href="../privacy/">Read the privacy policy <span aria-hidden="true">↗</span></a></div></div></section>
+    <section id="contact" class="contact-section container" aria-labelledby="contact-title"><p class="eyebrow">Let's make store days easier</p><h2 id="contact-title">A question? An idea?<br><em>We're listening.</em></h2><p>For app availability, setup help, or feedback, get in touch.</p><a class="button button-dark" href="mailto:razeappdev@gmail.com">Say hello <span aria-hidden="true">↗</span></a><a class="contact-email" href="mailto:razeappdev@gmail.com">razeappdev@gmail.com</a></section>
+  </main>
+  <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="../home/"><img src="../assets/brand/app-icon.png" width="36" height="36" alt=""><span>Raze<span class="brand-light">Store</span><span class="brand-dot">.</span></span></a><p>A little help for your everyday tindahan.</p><div><a href="../privacy/">Privacy policy</a><a href="mailto:razeappdev@gmail.com">Contact</a><a href="#main">Back to top ↑</a></div></div><div class="container footer-bottom"><span>© 2026 Raze Store · by remyo</span><span>Independent store companion. Not affiliated with GCash.</span></div></footer>
+  <dialog id="screen-dialog" class="screen-dialog" aria-labelledby="dialog-title"><div class="dialog-bar"><h2 id="dialog-title">Inside Raze Store</h2><button class="dialog-close" type="button" data-close-screen aria-label="Close screenshot">Close <span aria-hidden="true">×</span></button></div><img id="dialog-image" src="../assets/screenshots/home.png" width="1236" height="2460" alt="Enlarged product catalog screenshot with sample data"><p>Actual app screen · Sample data</p></dialog>
+</body>
+</html>
