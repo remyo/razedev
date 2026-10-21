@@ -1,0 +1,86 @@
+{
+  "site": {
+    "origin": "https://remyo.github.io",
+    "basePath": "/razedev/"
+  },
+  "apps": [
+    {
+      "slug": "razetag",
+      "name": "RazeTag",
+      "description": "Keep your resale items, sales, and records together.",
+      "accent": "#7450a8",
+      "icon": "images/razetag-logo.png",
+      "legacyBaseUrl": "https://remyo.github.io/razetag_h5/",
+      "pages": {
+        "index.html": "home",
+        "privacy.html": "privacy",
+        "guide.html": "guide"
+      },
+      "assets": [
+        "styles/site.css",
+        "images/guide/039d5058948426bd7a9c.png",
+        "images/guide/23459a34a95de09ff8e8.png",
+        "images/guide/3451afe9ab0c329eb57b.png",
+        "images/guide/3aedd459c6c32feec8ee.png",
+        "images/guide/555b424f4533cfd9f47c.png",
+        "images/guide/5949137cc9c9c42df737.png",
+        "images/guide/65da8959f282eaab82e4.png",
+        "images/guide/69fdc9b4be19269e918b.png",
+        "images/guide/736b12c99424f2133979.png",
+        "images/guide/7c87ecde83363bef593f.png",
+        "images/guide/7f07056998abfc9fdc31.png",
+        "images/guide/8a81f13fb4fb7abd5b88.png",
+        "images/guide/8bb44f96dcd351278102.png",
+        "images/guide/8bbc0424754490f35773.png",
+        "images/guide/938ebe6a35d88061daa8.png",
+        "images/guide/96a7dcfa50cddbb0e352.png",
+        "images/guide/9cfdea719c82aad5b665.png",
+        "images/guide/a01c19160df4a1dd7045.png",
+        "images/guide/a2502b2f228c61f467d6.png",
+        "images/guide/a386c587aa7cdba36837.png",
+        "images/guide/a78ed9648acc401bef4d.png",
+        "images/guide/ad6bef420c5f41c98507.png",
+        "images/guide/c439a40c9ceef6c7ea09.png",
+        "images/guide/c62d04018b0e6d68adef.png",
+        "images/guide/c9c247bf27c4ab46ada0.png",
+        "images/guide/cf290191fc30a8a28cb0.png",
+        "images/guide/e20d2100a9c373fe4436.png",
+        "images/guide/eb68d89b6780fd10d700.png",
+        "images/guide/f43b5cbe5cc30aec6042.png",
+        "images/guide/f7e21117ec92123e3df4.png",
+        "images/guide/fdbe8d4c6771a4095b9a.png",
+        "images/razetag-desktop-20260922.webp",
+        "images/razetag-home-20260922.webp",
+        "images/razetag-item-editor-20261008.webp",
+        "images/razetag-logo.png",
+        "images/razetag-mascot-peek-20261008.webp",
+        "images/razetag-mascot-wave-20261008.webp",
+        "images/razetag-overview-20260922.png",
+        "images/razetag-sync-devices-20260923.webp"
+      ]
+    },
+    {
+      "slug": "razestore",
+      "name": "RazeStore",
+      "description": "Products, checkout, and daily records for your tindahan.",
+      "accent": "#17624d",
+      "icon": "assets/brand/app-icon.png",
+      "legacyBaseUrl": "https://remyo.github.io/razestore_privacy/",
+      "pages": {
+        "index.html": "home",
+        "privacy.html": "privacy"
+      },
+      "assets": [
+        "assets/brand/app-icon.png",
+        "assets/images/raze-store-3d.png",
+        "assets/screenshots/checkout.png",
+        "assets/screenshots/gcash.png",
+        "assets/screenshots/home.png",
+        "assets/screenshots/receipt.png",
+        "assets/screenshots/sales.png",
+        "assets/site.css",
+        "assets/site.js"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "razedev",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=24"},
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/serve.mjs --port 8767",
+    "check": "node scripts/check.mjs"
+  }
+}
