@@ -95,3 +95,17 @@ test('rewritten public history and changed publication contract stop safely',asy
   const g=await setup();await changeSource(g);await writeFile(join(g.peer,'scripts/import-site.mjs'),'changed contract');git(g.peer,'add','.');git(g.peer,'commit','-m','contract change');git(g.peer,'push','origin','main');
   await assert.rejects(publish(g),/contract changed/i);
 });
+test('public commit hooks cannot add files outside the selected app',async()=>{
+  const f=await setup(),before=git(f.root,'--git-dir',f.remote,'rev-parse','main');await changeSource(f);
+  const hook=join(f.repoDir,'.git/hooks/pre-commit');
+  await writeFile(hook,'#!/bin/sh\nprintf "\\n<!-- hook change -->\\n" >> src/hub.html\ngit add src/hub.html\n');await chmod(hook,0o755);
+  await assert.rejects(publish(f),/outside.*product/i);
+  assert.equal(git(f.root,'--git-dir',f.remote,'rev-parse','main'),before);
+});
+test('public commit hook output is validated before pushing',async()=>{
+  const f=await setup(),before=git(f.root,'--git-dir',f.remote,'rev-parse','main');await changeSource(f);
+  const hook=join(f.repoDir,'.git/hooks/pre-commit');
+  await writeFile(hook,'#!/bin/sh\nprintf \'<a href="./missing/">Broken</a>\' > public/razetag/privacy/index.html\ngit add public/razetag/privacy/index.html\n');await chmod(hook,0o755);
+  await assert.rejects(publish(f),/Missing/);
+  assert.equal(git(f.root,'--git-dir',f.remote,'rev-parse','main'),before);
+});

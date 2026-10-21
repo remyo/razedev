@@ -113,7 +113,7 @@ to publishing logic live here. Add a matching source remote in
    repository's **Settings → Pages**, choose **GitHub Actions** as the source.
    The public workflow runs Node tests, builds and validates the assembled site,
    and uploads **only `dist/`** before deploying to the `github-pages` environment.
-2. In each private product repository, save an Actions secret named
+2. In each product repository, save an Actions secret named
    `RAZEDEV_PUBLISH_TOKEN`. Use a fine-grained personal access token selecting
    **only `remyo/razedev`**, with **Contents: read and write** (metadata read is
    automatic). Do not grant private-source or workflow-management permissions.
@@ -124,7 +124,7 @@ to publishing logic live here. Add a matching source remote in
    Ordinary product pushes do not publish automatically. Outdated workflow reruns
    fail; dispatch the latest `main` again.
 
-Private workflows export only their own `public/<app>/` snapshot, validate the
+Source workflows export only their own `public/<app>/` snapshot, validate the
 whole site, and push a snapshot commit only if content changed. A normal token
 authenticated push triggers RazeDev's Pages workflow. A product repository's
 default `GITHUB_TOKEN` cannot write to a different repository. The public
@@ -154,7 +154,7 @@ Declare new dependencies explicitly, including updated content-hashed guide
 images and social-preview assets. Use public website/demo assets only.
 
 Import it with `--app <slug> --source <source-checkout>`, build, check navigation,
-and add a matching manual workflow in its private source repository. The hub
+and add a matching manual workflow in its source repository. The hub
 card is generated automatically. Give a new card its own background styling in
 `src/hub.css` if desired. Keep navigation inside the product; no global header or
 cross-app links are injected.

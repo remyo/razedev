@@ -55,6 +55,12 @@ test('unexpected new files are rejected even when staged',async()=>{
     assert.equal(await readFile(join(f.sourceDir,'.env'),'utf8'),'demo=private');
   }
 });
+test('intent-to-add cannot sneak a nonmanifest file into the source push',async()=>{
+  const f=await setup(),sourceBefore=head(f);await change(f);await writeFile(join(f.sourceDir,'.env'),'demo=private');
+  git(f.sourceDir,'add','-N','.env');const status=git(f.sourceDir,'status','--porcelain');
+  await assert.rejects(run(f),/new files outside.*manifest/i);
+  assert.equal(head(f),sourceBefore);assert.equal(remoteHead(f,f.sourceRemote),sourceBefore);assert.equal(git(f.sourceDir,'status','--porcelain'),status);
+});
 test('wrong source branch, wrong source origin, and stale source stop before committing',async()=>{
   for(const mode of ['branch','origin','stale']) {
     const f=await setup(),before=head(f);await change(f);

@@ -50,7 +50,7 @@ export async function publishLocal({repoDir,sourceDir,slug,message,
   if(typeof commitMessage!=='string' || !commitMessage.trim()) throw new Error('Commit message must not be empty');
   const manifest=[...Object.keys(app.pages),...app.assets],allowed=new Set(manifest);
   const tracked=new Set(source(['ls-tree','-r','--name-only','-z','HEAD']).out.split('\0').filter(Boolean));
-  const added=[...source(['ls-files','--others','--exclude-standard','-z']).out.split('\0'),...source(['diff','--cached','--name-only','-z']).out.split('\0').filter(path=>!tracked.has(path))].filter(Boolean);
+  const added=[...source(['ls-files','--others','--exclude-standard','-z']).out.split('\0'),...source(['ls-files','--cached','-z']).out.split('\0').filter(path=>!tracked.has(path))].filter(Boolean);
   const unexpected=added.filter(path=>!allowed.has(path));
   if(unexpected.length) throw new Error(`New files outside the public manifest: ${[...new Set(unexpected)].join(', ')}. Commit intentional development files separately, or move/ignore them before publishing.`);
 

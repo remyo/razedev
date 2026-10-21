@@ -30,6 +30,12 @@ export async function publishProduct({repoDir,sourceDir,slug,maxAttempts=3,expec
     let base=git(['rev-parse','HEAD']).out;
     await importSite({repoDir,sourceDir,slug});await buildSite({repoDir});
     const prefix=`public/${slug}/`;
+    async function validateCandidate() {
+      const committed=git(['diff','--no-renames','--name-only','-z',base,'HEAD']).out.split('\0').filter(Boolean);
+      if(committed.some(path=>!path.startsWith(prefix))) throw new Error('Commit changes outside selected product');
+      if(git(['status','--porcelain']).out) throw new Error('Public checkout changed during commit; dispatch again');
+      await buildSite({repoDir});
+    }
     const changed=git(['status','--porcelain','-z']).out.split('\0').filter(Boolean);
     if(changed.some(line=>!line.slice(3).startsWith(prefix))) throw new Error('Changes outside selected product');
     git(['add','-A','--',prefix]);
@@ -37,6 +43,7 @@ export async function publishProduct({repoDir,sourceDir,slug,maxAttempts=3,expec
     const staged=git(['diff','--cached','--name-only','-z']).out.split('\0').filter(Boolean);
     if(staged.some(path=>!path.startsWith(prefix))) throw new Error('Staged changes outside product');
     git(['-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','commit','-m',`Update ${slug} public website`]);
+    await validateCandidate();
     let attempts=0;
     while(attempts<maxAttempts) {
       git(['fetch','--no-tags','origin','refs/heads/main:refs/remotes/origin/main'],{network:true});
@@ -53,7 +60,7 @@ export async function publishProduct({repoDir,sourceDir,slug,maxAttempts=3,expec
         }
         const rebased=git(['-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','rebase','--no-autostash','origin/main'],{allowFailure:true});
         if(rebased.code!==0) {git(['rebase','--abort'],{allowFailure:true});throw new Error('Public rebase conflicted; dispatch again');}
-        base=remote;await buildSite({repoDir});
+        base=remote;await validateCandidate();
       }
       attempts++;
       const pushed=git(['push','--porcelain','origin','HEAD:refs/heads/main'],{network:true,allowFailure:true});
