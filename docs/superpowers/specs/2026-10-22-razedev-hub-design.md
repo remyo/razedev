@@ -1,7 +1,11 @@
 # RazeDev hub and independent product websites
 
 Date: 2026-10-22 (Asia/Tokyo)
-Status: Design for user review; implementation has not started.
+Status: Approved by the user on 2026-10-22; implementation plan awaiting review.
+
+The user also confirmed that Vue or another framework is allowed. The initial
+implementation keeps the approved static approach because the hub needs no
+client-side application state; this is a design choice, not a user restriction.
 
 ## Purpose and agreed requirements
 
