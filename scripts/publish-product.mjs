@@ -51,7 +51,7 @@ export async function publishProduct({repoDir,sourceDir,slug,maxAttempts=3,expec
           if(actual.code===0 && actual.out===wanted) return {status:'unchanged',commit:null,attempts};
           throw new Error('This product changed remotely; dispatch again');
         }
-        const rebased=git(['rebase','--no-autostash','origin/main'],{allowFailure:true});
+        const rebased=git(['-c','user.name=github-actions[bot]','-c','user.email=41898282+github-actions[bot]@users.noreply.github.com','rebase','--no-autostash','origin/main'],{allowFailure:true});
         if(rebased.code!==0) {git(['rebase','--abort'],{allowFailure:true});throw new Error('Public rebase conflicted; dispatch again');}
         base=remote;await buildSite({repoDir});
       }

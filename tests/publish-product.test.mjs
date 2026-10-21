@@ -40,6 +40,13 @@ test('different app publishes from same base preserve both products',async()=>{
   await publishProduct({repoDir:f.peer,sourceDir:f.sourceDir,slug:'razestore',expectedRemote:f.remote});
   for(const app of ['razetag','razestore']) assert.match(git(f.root,'--git-dir',f.remote,'show',`main:public/${app}/privacy/index.html`),/Updated policy/);
 });
+test('rebasing publication does not require a configured machine identity',async()=>{
+  const f=await setup();await changeSource(f);await publish(f,'razetag');
+  for(const [key,value] of [['user.useConfigOnly','true'],['user.name',''],['user.email','']]) git(f.peer,'config',key,value);
+  const result=await publishProduct({repoDir:f.peer,sourceDir:f.sourceDir,slug:'razestore',expectedRemote:f.remote});
+  assert.equal(result.status,'published');
+  assert.equal(git(f.root,'--git-dir',f.remote,'show','-s','--format=%cn <%ce>','main'),'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>');
+});
 test('same-app concurrent updates accept identical and reject different output',async()=>{
   const f=await setup();await changeSource(f);await publish(f);
   assert.equal((await publishProduct({repoDir:f.peer,sourceDir:f.sourceDir,slug:'razetag',expectedRemote:f.remote})).status,'unchanged');
