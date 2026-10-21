@@ -39,7 +39,7 @@ updated product snapshot.
 
 `src/hub.html` and `src/hub.css` define the hub. `apps.json` defines the cards,
 routes, and exact public asset manifests. `public/<app>/` is generated output;
-edit product content in its private source repository instead.
+edit product content in its source repository instead.
 
 To refresh local snapshots when the checkouts are sibling directories:
 
@@ -78,6 +78,37 @@ node scripts/check.mjs --source razetag=../razetag_h5 --source razestore=../raze
 
 ## Publishing
 
+### From a source checkout with SSH
+
+Run this in `razetag_h5` or `razestore_privacy`, on `main`:
+
+```sh
+sh publish.sh gith5 "update privacy"
+```
+
+The optional message defaults to `Update RazeTag website` or `Update RazeStore
+website`. Each source's small `publish.sh` fetches a disposable RazeDev `main`
+clone and invokes the shared `scripts/publish-local.mjs` with its fixed app slug.
+It requires Git, Node.js 24+, GitHub SSH access, and a Git commit identity; no
+publishing token or local RazeDev checkout is needed.
+
+The publisher checks source/destination origins and source freshness, validates
+the combined site before committing, commits all tracked source changes plus
+new manifest files, and pushes source `main` before exporting its public snapshot.
+Review tracked changes first. New files outside the public manifest, including
+staged additions, are rejected; commit intentional development files separately.
+Missing assets, invalid links, outdated branches, or Git hook/push failures stop
+the run. Source edits/local commits are preserved; no branch switching, stashing,
+source resets, or force pushes occur. Temporary output is removed on exit.
+
+Only the selected `public/<app>/` changes in RazeDev. A changed snapshot pushed to
+RazeDev `main` triggers its Pages deployment. An identical snapshot creates no
+public commit. The wrappers fetch the shared publisher afresh each run, so fixes
+to publishing logic live here. Add a matching source remote in
+`scripts/publish-local.mjs` when adding another app with a local wrapper.
+
+### Optional GitHub Actions publishing
+
 1. Review and push the RazeDev changes to `main` when ready. In the public
    repository's **Settings → Pages**, choose **GitHub Actions** as the source.
    The public workflow runs Node tests, builds and validates the assembled site,
@@ -105,8 +136,9 @@ same app or changes to the publication contract stop and request a fresh run.
 No force pushes are used. Branch protections may require additional repository
 configuration; the publisher reports rejection instead of bypassing them.
 
-Repository visibility and Pages settings are remote configuration. Verify the
-two sources are private and RazeDev is public before production cutover. Published
+Repository visibility and Pages settings are remote configuration. RazeDev is
+public. Keep the two source repositories public until existing app/store links
+have been updated and the old Pages URLs can be retired. Published
 HTML/CSS/JavaScript/images remain publicly readable. Keep old `/razetag_h5/` and
 `/razestore_privacy/` deployments until existing app/store policy URLs have a
 separately verified migration. RazeDev cannot redirect requests at another
