@@ -6,6 +6,7 @@ import {readRegistry} from './lib/registry.mjs';
 import {importSite} from './import-site.mjs';
 import {buildSite} from './build.mjs';
 import {publishProduct} from './publish-product.mjs';
+import {prepareSite} from './lib/prepare-site.mjs';
 
 const sourceRemotes={
   razetag:'git@github.com:remyo/razetag_h5.git',
@@ -54,7 +55,9 @@ export async function publishLocal({repoDir,sourceDir,slug,message,sitePath='.',
   if(!app) throw new Error(`Unknown app: ${slug}`);
   const commitMessage=message===undefined?`Update ${app.name} website`:message;
   if(typeof commitMessage!=='string' || !commitMessage.trim()) throw new Error('Commit message must not be empty');
-  const manifest=[...Object.keys(app.pages),...app.assets].map(path=>prefix+path),allowed=new Set(manifest);
+  // Compiled sites commit tracked source, never generated dist paths. New
+  // components/assets must be reviewed and committed explicitly first.
+  const manifest=app.build==='npm'?[]:[...Object.keys(app.pages),...app.assets].map(path=>prefix+path),allowed=new Set(manifest);
   const tracked=new Set(source(['ls-tree','-r','--name-only','-z','HEAD']).out.split('\0').filter(Boolean));
   const added=[...source(['ls-files','--others','--exclude-standard','-z','--',sitePath]).out.split('\0'),...source(['ls-files','--cached','-z','--',sitePath]).out.split('\0').filter(path=>!tracked.has(path))].filter(Boolean);
   const unexpected=added.filter(path=>!allowed.has(path));
@@ -66,14 +69,14 @@ export async function publishLocal({repoDir,sourceDir,slug,message,sitePath='.',
   if(outsideSelected('origin/main','HEAD')) throw new Error('Unpushed commits outside the selected app. Review and push repository changes separately before publishing.');
 
   log(`Validating ${app.name} and the combined RazeDev site...`);
-  await importSite({repoDir,sourceDir:siteDir,slug});await buildSite({repoDir});
+  await importSite({repoDir,sourceDir:await prepareSite({siteDir,registry,app}),slug});await buildSite({repoDir});
   const sourceBefore=source(['rev-parse','HEAD']).out;
-  source(['add','-u','--',sitePath]);source(['add','-A','--',...manifest]);
+  source(['add','-u','--',sitePath]);if(manifest.length)source(['add','-A','--',...manifest]);
   if(source(['diff','--cached','--name-only','--',sitePath]).out) source(['commit','--only','-m',commitMessage,'--',sitePath]);
   if(outsideSelected(sourceBefore,'HEAD')) throw new Error('Source commit changed files outside the selected app; nothing was pushed.');
   if(selectedStatus()) throw new Error('Source changed during the commit. Review the remaining changes and rerun; nothing was pushed.');
   // Hooks may change the committed website, so validate the resulting files too.
-  await importSite({repoDir,sourceDir:siteDir,slug});await buildSite({repoDir});
+  await importSite({repoDir,sourceDir:await prepareSite({siteDir,registry,app}),slug});await buildSite({repoDir});
   if(selectedStatus()) throw new Error('Source changed during validation. Review and rerun; nothing was pushed.');
 
   log(`Pushing ${app.name} source main...`);

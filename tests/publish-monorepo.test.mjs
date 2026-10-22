@@ -85,3 +85,20 @@ test('product publishing reads a nested committed app while another app is dirty
   const result=await publishProduct({...f,slug:'razetag',sitePath:'razetag',expectedRemote:f.publicRemote});
   assert.equal(result.status,'published');assert.match(git(f.root,'--git-dir',f.publicRemote,'show','main:public/razetag/privacy/index.html'),/Selected update/);
 });
+test('compiled app publishes freshly built HTML and preserves another app staging',async()=>{
+  const f=await setup();f.registry.apps[0].build='npm';
+  await writeFile(join(f.repoDir,'apps.json'),JSON.stringify(f.registry));git(f.repoDir,'add','apps.json');git(f.repoDir,'commit','-m','configure compiled app');git(f.repoDir,'push','origin','main');
+  const appDir=join(f.sourceDir,'razetag');
+  git(f.sourceDir,'rm','razetag/index.html','razetag/privacy.html');
+  const pkg={name:'compiled-app-fixture',version:'1.0.0',scripts:{build:'node build.mjs'}};
+  await writeFile(join(appDir,'package.json'),JSON.stringify(pkg));
+  await writeFile(join(appDir,'package-lock.json'),JSON.stringify({name:pkg.name,version:pkg.version,lockfileVersion:3,packages:{'':{name:pkg.name,version:pkg.version}}}));
+  await writeFile(join(appDir,'.gitignore'),'dist/\nnode_modules/\n');
+  await writeFile(join(appDir,'policy.txt'),'Original');
+  await writeFile(join(appDir,'build.mjs'),`import {mkdir,cp,writeFile,readFile} from 'node:fs/promises';await mkdir('dist/razedev',{recursive:true});await cp('assets','dist/razedev/assets',{recursive:true});const base=process.env.BASE_PATH;await writeFile('dist/razedev/index.html','<h1>Home</h1><a href="'+base+'privacy/">Privacy</a>');await writeFile('dist/razedev/privacy.html','<h1>'+await readFile('policy.txt','utf8')+'</h1><a href="'+base+'home/">Home</a>');`);
+  git(f.sourceDir,'add','razetag');git(f.sourceDir,'commit','-m','compiled source');git(f.sourceDir,'push','origin','main');
+  await writeFile(join(appDir,'policy.txt'),'Fresh compiled policy');await change(f,'razestore','Other staged work');git(f.sourceDir,'add','razestore/privacy.html');const staging=git(f.sourceDir,'diff','--cached');
+  const result=await run(f);assert.equal(result.publication.status,'published');assert.equal(git(f.sourceDir,'diff','--cached'),staging);
+  assert.match(git(f.root,'--git-dir',f.publicRemote,'show','main:public/razetag/privacy/index.html'),/Fresh compiled policy/);
+  assert.doesNotMatch(git(f.root,'--git-dir',f.sourceRemote,'ls-tree','-r','--name-only','main'),/dist\//);
+});

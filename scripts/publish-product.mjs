@@ -5,6 +5,8 @@ import {join,resolve} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {importSite} from './import-site.mjs';
 import {buildSite} from './build.mjs';
+import {readRegistry} from './lib/registry.mjs';
+import {prepareSite} from './lib/prepare-site.mjs';
 
 export async function publishProduct({repoDir,sourceDir,slug,sitePath='.',maxAttempts=3,expectedRemote='https://github.com/remyo/razedev.git'}) {
   if(sitePath!=='.' && sitePath!==slug) throw new Error('Source site path must match the selected app folder');
@@ -28,8 +30,12 @@ export async function publishProduct({repoDir,sourceDir,slug,sitePath='.',maxAtt
     if(git(['branch','--show-current']).out!=='main' || git(['status','--porcelain']).out) throw new Error('Public checkout must be clean and on main');
     const sourceHead=git(['rev-parse','HEAD'],{cwd:sourceDir}).out,sourceMain=git(['rev-parse','refs/remotes/origin/main'],{cwd:sourceDir}).out;
     if(sourceHead!==sourceMain || git(['status','--porcelain','--untracked-files=all','--',sitePath],{cwd:sourceDir}).out) throw new Error('Source is stale or dirty; dispatch the latest source main');
+    const registry=await readRegistry(repoDir),app=registry.apps.find(app=>app.slug===slug);
+    if(!app) throw new Error(`Unknown app: ${slug}`);
+    const prepared=await prepareSite({siteDir:join(sourceDir,sitePath),registry,app});
+    if(git(['rev-parse','HEAD'],{cwd:sourceDir}).out!==sourceHead || git(['status','--porcelain','--untracked-files=all','--',sitePath],{cwd:sourceDir}).out) throw new Error('Source changed during website build; dispatch again');
     let base=git(['rev-parse','HEAD']).out;
-    await importSite({repoDir,sourceDir:join(sourceDir,sitePath),slug});await buildSite({repoDir});
+    await importSite({repoDir,sourceDir:prepared,slug});await buildSite({repoDir});
     const prefix=`public/${slug}/`;
     async function validateCandidate() {
       const committed=git(['diff','--no-renames','--name-only','-z',base,'HEAD']).out.split('\0').filter(Boolean);

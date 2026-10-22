@@ -16,8 +16,9 @@ export async function readRegistry(repoDir) {
     if (!/^[a-z][a-z0-9-]*$/.test(app.slug) || slugs.has(app.slug)) throw new Error('Invalid or duplicate app slug');
     slugs.add(app.slug);
     if (![app.name,app.description].every(x=>typeof x==='string' && x.trim()) || !/^#[0-9a-f]{6}$/i.test(app.accent)) throw new Error('Invalid card details');
+    if (app.build!==undefined && app.build!=='npm') throw new Error('Unsupported app build');
     if (!Array.isArray(app.assets) || new Set(app.assets).size!==app.assets.length) throw new Error('Invalid asset manifest');
-    for (const file of app.assets) {safePath(file); if (!/\.(?:css|js|png|webp|jpe?g|svg|gif|ico)$/i.test(file)) throw new Error(`Unsupported asset: ${file}`);}
+    for (const file of app.assets) {safePath(file); if (!/\.(?:css|js|png|webp|jpe?g|svg|gif|ico|ttf|woff2|txt)$/i.test(file)) throw new Error(`Unsupported asset: ${file}`);}
     if (!app.assets.includes(safePath(app.icon))) throw new Error('Icon absent from manifest');
     if (!app.pages || app.pages['index.html']!=='home' || app.pages['privacy.html']!=='privacy') throw new Error('Home/privacy mappings required');
     const routes=new Set();

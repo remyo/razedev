@@ -2,6 +2,9 @@ import {posix} from 'node:path';
 import {scanHtml, escapeHtml} from './html.mjs';
 
 export function rewritePage(html,{registry,app,sourcePage}) {
+  // Built Vue pages already use their final namespace; preserve hydration bytes.
+  // The importer still checks every declared file, reference and app boundary.
+  if(app.build==='npm') return html;
   const pageRoute=app.pages[sourcePage]; if(!pageRoute) throw new Error('Unknown source page');
   const publicBase=`${registry.site.origin}${registry.site.basePath}${app.slug}/`;
   function relocate(input,absolute=false) {

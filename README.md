@@ -1,6 +1,6 @@
 # RazeDev
 
-Public hub for RazeTag, RazeStore, and future Raze apps, bringing together product
+Public hub for RazeTag, RazeStore, Raze Crack, and future Raze apps, bringing together product
 websites, guides, and privacy policies in one place.
 
 Contact: [razeappdev@gmail.com](mailto:razeappdev@gmail.com).
@@ -15,6 +15,10 @@ Contact: [razeappdev@gmail.com](mailto:razeappdev@gmail.com).
 | `/razedev/razetag/guide/` | RazeTag user guide |
 | `/razedev/razestore/home/` | RazeStore introduction |
 | `/razedev/razestore/privacy/` | RazeStore policy |
+| `/razedev/razecrack/home/` | Raze Crack introduction |
+| `/razedev/razecrack/privacy/` | Raze Crack pre-release policy |
+| `/razedev/razecrack/guide/` | Raze Crack guide |
+| `/razedev/razecrack/contact/` | Raze Crack contact |
 
 These are deployment addresses; a local build does not publish them. Requests
 without the final slash normalize to directory routes. Each product's logo,
@@ -85,6 +89,7 @@ Run this at the root of the private `web_razedev` checkout, on `main`:
 ```sh
 sh publish.sh gith5 razetag "update privacy"
 sh publish.sh gith5 razestore "update screenshots"
+sh publish.sh gith5 razecrack "update website"
 ```
 
 The message is optional. The root wrapper fetches a disposable RazeDev `main`
@@ -105,6 +110,17 @@ source resets, or force pushes occur. Temporary output is removed on exit.
 Only the selected `public/<app>/` changes here. Identical exports create no public
 commit; changed exports trigger Pages deployment. Shared publisher fixes live
 here and are fetched afresh by the private root wrapper.
+
+Raze Crack uses Vue. Its `build: "npm"` registry entry makes the shared publisher
+run `npm ci --ignore-scripts --no-audit --no-fund` and `npm run build` in the private
+app folder with its RazeDev base path. Only the exact browser manifest in
+`dist/razedev/` is exported. Prerendered HTML is preserved for Vue hydration;
+the same link, asset, email and app-boundary validation still applies. New Vue
+components or source assets must be reviewed and committed explicitly before
+publishing; the command commits existing tracked source changes and never `dist`.
+For a manual local snapshot, first run the private build with
+`BASE_PATH=/razedev/razecrack/`, then import with `--app razecrack --source
+../web_razedev/razecrack/dist/razedev`.
 
 ### Optional GitHub Actions publishing
 
