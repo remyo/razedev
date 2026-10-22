@@ -33,6 +33,9 @@ export async function publishLocal({repoDir,sourceDir,slug,message,sitePath='.',
   const destination=(args,options)=>git(repoDir,args,options);
   const siteDir=join(sourceDir,sitePath),prefix=sitePath==='.'?'':`${sitePath}/`;
   const selectedStatus=()=>source(['status','--porcelain','--untracked-files=all','--',sitePath]).out;
+  // Inspect every outgoing commit, including each merge parent. A draft followed
+  // by a revert still exposes that draft in pushed history.
+  const outsideSelected=(before,after)=>prefix && source(['log','--format=','--name-only','--no-renames','-z','-m',`${before}..${after}`]).out.split('\0').filter(Boolean).some(path=>!path.startsWith(prefix));
   if(source(['branch','--show-current']).out!=='main') throw new Error('Run publishing from the source main branch');
   if(resolve(source(['rev-parse','--show-toplevel']).out)!==sourceDir) throw new Error('Source must be the repository root');
   for(const state of ['MERGE_HEAD','CHERRY_PICK_HEAD','REVERT_HEAD','rebase-merge','rebase-apply']) {
@@ -60,14 +63,14 @@ export async function publishLocal({repoDir,sourceDir,slug,message,sitePath='.',
   log(`Checking ${app.name} source main...`);
   source(['fetch','--no-tags',expectedSourceRemote,'refs/heads/main:refs/remotes/origin/main']);
   if(source(['merge-base','--is-ancestor','origin/main','HEAD'],{allowFailure:true}).code!==0) throw new Error('Source main is behind or diverged from GitHub. Pull/reconcile it before publishing; local edits are preserved.');
-  if(prefix && source(['diff','--no-renames','--name-only','-z','origin/main','HEAD']).out.split('\0').filter(Boolean).some(path=>!path.startsWith(prefix))) throw new Error('Unpushed commits outside the selected app. Review and push repository changes separately before publishing.');
+  if(outsideSelected('origin/main','HEAD')) throw new Error('Unpushed commits outside the selected app. Review and push repository changes separately before publishing.');
 
   log(`Validating ${app.name} and the combined RazeDev site...`);
   await importSite({repoDir,sourceDir:siteDir,slug});await buildSite({repoDir});
   const sourceBefore=source(['rev-parse','HEAD']).out;
   source(['add','-u','--',sitePath]);source(['add','-A','--',...manifest]);
   if(source(['diff','--cached','--name-only','--',sitePath]).out) source(['commit','--only','-m',commitMessage,'--',sitePath]);
-  if(prefix && source(['diff','--no-renames','--name-only','-z',sourceBefore,'HEAD']).out.split('\0').filter(Boolean).some(path=>!path.startsWith(prefix))) throw new Error('Source commit changed files outside the selected app; nothing was pushed.');
+  if(outsideSelected(sourceBefore,'HEAD')) throw new Error('Source commit changed files outside the selected app; nothing was pushed.');
   if(selectedStatus()) throw new Error('Source changed during the commit. Review the remaining changes and rerun; nothing was pushed.');
   // Hooks may change the committed website, so validate the resulting files too.
   await importSite({repoDir,sourceDir:siteDir,slug});await buildSite({repoDir});

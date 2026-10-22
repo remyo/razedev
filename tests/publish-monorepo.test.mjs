@@ -57,6 +57,14 @@ test('unrelated unpublished commits are not pushed by a selected-app command',as
   const f=await setup(),before=remoteHead(f,f.sourceRemote);await change(f,'razestore','Committed unfinished policy');git(f.sourceDir,'add','.');git(f.sourceDir,'commit','-m','other app draft');const head=git(f.sourceDir,'rev-parse','HEAD');await change(f);
   await assert.rejects(run(f),/unpushed.*outside|unpublished.*outside/i);assert.equal(git(f.sourceDir,'rev-parse','HEAD'),head);assert.equal(remoteHead(f,f.sourceRemote),before);
 });
+test('reverted unrelated unpublished commits cannot leak through selected-app publication',async()=>{
+  const f=await setup(),before=remoteHead(f,f.sourceRemote);
+  await writeFile(join(f.sourceDir,'razestore/README.md'),'Unfinished other-app private draft');
+  git(f.sourceDir,'add','razestore/README.md');git(f.sourceDir,'commit','-m','other-app draft');
+  git(f.sourceDir,'revert','--no-edit','HEAD');const head=git(f.sourceDir,'rev-parse','HEAD');await change(f);
+  await assert.rejects(run(f),/unpushed.*outside|unpublished.*outside/i);
+  assert.equal(git(f.sourceDir,'rev-parse','HEAD'),head);assert.equal(remoteHead(f,f.sourceRemote),before);
+});
 test('selected validation failures preserve all staging and never push',async()=>{
   const f=await setup(),before=remoteHead(f,f.sourceRemote);await change(f,'razestore','Other staged policy');git(f.sourceDir,'add','razestore/privacy.html');
   await change(f,'razetag','<a href="https://remyo.github.io/razedev/">Hub</a>');const staged=git(f.sourceDir,'diff','--cached');
