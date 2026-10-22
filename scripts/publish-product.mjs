@@ -6,7 +6,8 @@ import {pathToFileURL} from 'node:url';
 import {importSite} from './import-site.mjs';
 import {buildSite} from './build.mjs';
 
-export async function publishProduct({repoDir,sourceDir,slug,maxAttempts=3,expectedRemote='https://github.com/remyo/razedev.git'}) {
+export async function publishProduct({repoDir,sourceDir,slug,sitePath='.',maxAttempts=3,expectedRemote='https://github.com/remyo/razedev.git'}) {
+  if(sitePath!=='.' && sitePath!==slug) throw new Error('Source site path must match the selected app folder');
   if(!Number.isInteger(maxAttempts) || maxAttempts<1 || maxAttempts>3) throw new Error('At most 3 push attempts permitted');
   const token=process.env.RAZEDEV_PUBLISH_TOKEN;delete process.env.RAZEDEV_PUBLISH_TOKEN;
   const authDir=await mkdtemp(join(tmpdir(),'razedev-auth-')),askpass=join(authDir,'askpass');
@@ -26,9 +27,9 @@ export async function publishProduct({repoDir,sourceDir,slug,maxAttempts=3,expec
     if(expectedRemote.startsWith('https:') && !token) throw new Error('RAZEDEV_PUBLISH_TOKEN is required');
     if(git(['branch','--show-current']).out!=='main' || git(['status','--porcelain']).out) throw new Error('Public checkout must be clean and on main');
     const sourceHead=git(['rev-parse','HEAD'],{cwd:sourceDir}).out,sourceMain=git(['rev-parse','refs/remotes/origin/main'],{cwd:sourceDir}).out;
-    if(sourceHead!==sourceMain || git(['status','--porcelain'],{cwd:sourceDir}).out) throw new Error('Source is stale or dirty; dispatch the latest source main');
+    if(sourceHead!==sourceMain || git(['status','--porcelain','--untracked-files=all','--',sitePath],{cwd:sourceDir}).out) throw new Error('Source is stale or dirty; dispatch the latest source main');
     let base=git(['rev-parse','HEAD']).out;
-    await importSite({repoDir,sourceDir,slug});await buildSite({repoDir});
+    await importSite({repoDir,sourceDir:join(sourceDir,sitePath),slug});await buildSite({repoDir});
     const prefix=`public/${slug}/`;
     async function validateCandidate() {
       const committed=git(['diff','--no-renames','--name-only','-z',base,'HEAD']).out.split('\0').filter(Boolean);
@@ -80,6 +81,6 @@ if(process.argv[1] && import.meta.url===pathToFileURL(resolve(process.argv[1])).
   const args=process.argv.slice(2),get=name=>args[args.indexOf(name)+1];
   try {
     if(!['--app','--source','--checkout'].every(flag=>args.includes(flag))) throw new Error('Usage: publish-product.mjs --app <slug> --source <dir> --checkout <dir>');
-    console.log(JSON.stringify(await publishProduct({repoDir:resolve(get('--checkout')),sourceDir:resolve(get('--source')),slug:get('--app'),maxAttempts:args.includes('--max-attempts')?Number(get('--max-attempts')):3})));
+    console.log(JSON.stringify(await publishProduct({repoDir:resolve(get('--checkout')),sourceDir:resolve(get('--source')),sitePath:args.includes('--site-path')?get('--site-path'):'.',slug:get('--app'),maxAttempts:args.includes('--max-attempts')?Number(get('--max-attempts')):3})));
   } catch(error) {console.error(error.message);process.exitCode=1;}
 }

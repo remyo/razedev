@@ -1,6 +1,6 @@
 import {spawnSync} from 'node:child_process';
 import {access} from 'node:fs/promises';
-import {resolve,dirname} from 'node:path';
+import {resolve,dirname,join} from 'node:path';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {readRegistry} from './lib/registry.mjs';
 import {importSite} from './import-site.mjs';
@@ -15,9 +15,10 @@ const publicRemote='git@github.com:remyo/razedev.git';
 const canonical=url=>url.replace(/^git@github.com:/,'https://github.com/').replace(/\.git$/,'');
 
 // repoDir is a clean, disposable clone created by the source repository's wrapper.
-export async function publishLocal({repoDir,sourceDir,slug,message,
-  expectedSourceRemote=sourceRemotes[slug],expectedPublicRemote=publicRemote,log=console.log}) {
+export async function publishLocal({repoDir,sourceDir,slug,message,sitePath='.',
+  expectedSourceRemote=sitePath==='.'?sourceRemotes[slug]:'git@github.com:remyo/web_razedev.git',expectedPublicRemote=publicRemote,log=console.log}) {
   if(Number(process.versions.node.split('.')[0])<24) throw new Error('Node.js 24 or newer is required');
+  if(sitePath!=='.' && sitePath!==slug) throw new Error('Source site path must match the selected app folder');
   if(!expectedSourceRemote) throw new Error(`Unknown app: ${slug}`);
   repoDir=resolve(repoDir);sourceDir=resolve(sourceDir);
   // Local publishing uses SSH; do not pass an unrelated Actions token to hooks.
@@ -30,6 +31,8 @@ export async function publishLocal({repoDir,sourceDir,slug,message,
   }
   const source=(args,options)=>git(sourceDir,args,options);
   const destination=(args,options)=>git(repoDir,args,options);
+  const siteDir=join(sourceDir,sitePath),prefix=sitePath==='.'?'':`${sitePath}/`;
+  const selectedStatus=()=>source(['status','--porcelain','--untracked-files=all','--',sitePath]).out;
   if(source(['branch','--show-current']).out!=='main') throw new Error('Run publishing from the source main branch');
   if(resolve(source(['rev-parse','--show-toplevel']).out)!==sourceDir) throw new Error('Source must be the repository root');
   for(const state of ['MERGE_HEAD','CHERRY_PICK_HEAD','REVERT_HEAD','rebase-merge','rebase-apply']) {
@@ -48,24 +51,27 @@ export async function publishLocal({repoDir,sourceDir,slug,message,
   if(!app) throw new Error(`Unknown app: ${slug}`);
   const commitMessage=message===undefined?`Update ${app.name} website`:message;
   if(typeof commitMessage!=='string' || !commitMessage.trim()) throw new Error('Commit message must not be empty');
-  const manifest=[...Object.keys(app.pages),...app.assets],allowed=new Set(manifest);
+  const manifest=[...Object.keys(app.pages),...app.assets].map(path=>prefix+path),allowed=new Set(manifest);
   const tracked=new Set(source(['ls-tree','-r','--name-only','-z','HEAD']).out.split('\0').filter(Boolean));
-  const added=[...source(['ls-files','--others','--exclude-standard','-z']).out.split('\0'),...source(['ls-files','--cached','-z']).out.split('\0').filter(path=>!tracked.has(path))].filter(Boolean);
+  const added=[...source(['ls-files','--others','--exclude-standard','-z','--',sitePath]).out.split('\0'),...source(['ls-files','--cached','-z','--',sitePath]).out.split('\0').filter(path=>!tracked.has(path))].filter(Boolean);
   const unexpected=added.filter(path=>!allowed.has(path));
   if(unexpected.length) throw new Error(`New files outside the public manifest: ${[...new Set(unexpected)].join(', ')}. Commit intentional development files separately, or move/ignore them before publishing.`);
 
   log(`Checking ${app.name} source main...`);
   source(['fetch','--no-tags',expectedSourceRemote,'refs/heads/main:refs/remotes/origin/main']);
   if(source(['merge-base','--is-ancestor','origin/main','HEAD'],{allowFailure:true}).code!==0) throw new Error('Source main is behind or diverged from GitHub. Pull/reconcile it before publishing; local edits are preserved.');
+  if(prefix && source(['diff','--no-renames','--name-only','-z','origin/main','HEAD']).out.split('\0').filter(Boolean).some(path=>!path.startsWith(prefix))) throw new Error('Unpushed commits outside the selected app. Review and push repository changes separately before publishing.');
 
   log(`Validating ${app.name} and the combined RazeDev site...`);
-  await importSite({repoDir,sourceDir,slug});await buildSite({repoDir});
-  source(['add','-u']);source(['add','-A','--',...manifest]);
-  if(source(['diff','--cached','--name-only']).out) source(['commit','-m',commitMessage]);
-  if(source(['status','--porcelain']).out) throw new Error('Source changed during the commit. Review the remaining changes and rerun; nothing was pushed.');
+  await importSite({repoDir,sourceDir:siteDir,slug});await buildSite({repoDir});
+  const sourceBefore=source(['rev-parse','HEAD']).out;
+  source(['add','-u','--',sitePath]);source(['add','-A','--',...manifest]);
+  if(source(['diff','--cached','--name-only','--',sitePath]).out) source(['commit','--only','-m',commitMessage,'--',sitePath]);
+  if(prefix && source(['diff','--no-renames','--name-only','-z',sourceBefore,'HEAD']).out.split('\0').filter(Boolean).some(path=>!path.startsWith(prefix))) throw new Error('Source commit changed files outside the selected app; nothing was pushed.');
+  if(selectedStatus()) throw new Error('Source changed during the commit. Review the remaining changes and rerun; nothing was pushed.');
   // Hooks may change the committed website, so validate the resulting files too.
-  await importSite({repoDir,sourceDir,slug});await buildSite({repoDir});
-  if(source(['status','--porcelain']).out) throw new Error('Source changed during validation. Review and rerun; nothing was pushed.');
+  await importSite({repoDir,sourceDir:siteDir,slug});await buildSite({repoDir});
+  if(selectedStatus()) throw new Error('Source changed during validation. Review and rerun; nothing was pushed.');
 
   log(`Pushing ${app.name} source main...`);
   source(['push',expectedSourceRemote,'HEAD:refs/heads/main']);
@@ -74,11 +80,11 @@ export async function publishLocal({repoDir,sourceDir,slug,message,
   if(sourceCommit!==source(['rev-parse','origin/main']).out) throw new Error('Source main advanced during publication. Reconcile it and rerun; no public export was pushed.');
 
   // Discard only validation output in the disposable clone, never source edits.
-  const prefix=`public/${slug}/`;
-  destination(['restore','--source=HEAD','--staged','--worktree','--',prefix]);
-  destination(['clean','-fd','--',prefix]);
+  const publicPrefix=`public/${slug}/`;
+  destination(['restore','--source=HEAD','--staged','--worktree','--',publicPrefix]);
+  destination(['clean','-fd','--',publicPrefix]);
   log(`Publishing only ${app.name} to RazeDev...`);
-  const publication=await publishProduct({repoDir,sourceDir,slug,expectedRemote:expectedPublicRemote});
+  const publication=await publishProduct({repoDir,sourceDir,sitePath,slug,expectedRemote:expectedPublicRemote});
   log(publication.status==='unchanged'?'The public website is already up to date.':'Public export pushed. GitHub Pages will deploy it automatically.');
   log(`${registry.site.origin}${registry.site.basePath}${slug}/home/`);
   return {sourceCommit,publication};
@@ -87,7 +93,12 @@ export async function publishLocal({repoDir,sourceDir,slug,message,
 if(process.argv[1] && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   const args=process.argv.slice(2);
   try {
-    if(![4,6].includes(args.length) || args[0]!=='--app' || args[2]!=='--source' || (args.length===6 && args[4]!=='--message')) throw new Error('Usage: publish-local.mjs --app <slug> --source <directory> [--message <message>]');
-    await publishLocal({repoDir:resolve(dirname(fileURLToPath(import.meta.url)),'..'),sourceDir:args[3],slug:args[1],message:args[5]});
+    const options=new Map();
+    for(let i=0;i<args.length;i+=2) {
+      if(!['--app','--source','--site-path','--message'].includes(args[i]) || options.has(args[i]) || args[i+1]===undefined) throw new Error('Usage: publish-local.mjs --app <slug> --source <repository> [--site-path <slug>] [--message <message>]');
+      options.set(args[i],args[i+1]);
+    }
+    if(!options.has('--app') || !options.has('--source')) throw new Error('App and source repository are required');
+    await publishLocal({repoDir:resolve(dirname(fileURLToPath(import.meta.url)),'..'),sourceDir:options.get('--source'),slug:options.get('--app'),sitePath:options.get('--site-path') || '.',message:options.get('--message')});
   } catch(error) {console.error(error.message);process.exitCode=1;}
 }
