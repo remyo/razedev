@@ -85,7 +85,7 @@ test('product publishing reads a nested committed app while another app is dirty
   const result=await publishProduct({...f,slug:'razetag',sitePath:'razetag',expectedRemote:f.publicRemote});
   assert.equal(result.status,'published');assert.match(git(f.root,'--git-dir',f.publicRemote,'show','main:public/razetag/privacy/index.html'),/Selected update/);
 });
-test('compiled app publishes freshly built HTML and preserves another app staging',async()=>{
+async function compiledSource() {
   const f=await setup();f.registry.apps[0].build='npm';
   await writeFile(join(f.repoDir,'apps.json'),JSON.stringify(f.registry));git(f.repoDir,'add','apps.json');git(f.repoDir,'commit','-m','configure compiled app');git(f.repoDir,'push','origin','main');
   const appDir=join(f.sourceDir,'razetag');
@@ -97,8 +97,22 @@ test('compiled app publishes freshly built HTML and preserves another app stagin
   await writeFile(join(appDir,'policy.txt'),'Original');
   await writeFile(join(appDir,'build.mjs'),`import {mkdir,cp,writeFile,readFile} from 'node:fs/promises';await mkdir('dist/razedev',{recursive:true});await cp('assets','dist/razedev/assets',{recursive:true});const base=process.env.BASE_PATH;await writeFile('dist/razedev/index.html','<h1>Home</h1><a href="'+base+'privacy/">Privacy</a>');await writeFile('dist/razedev/privacy.html','<h1>'+await readFile('policy.txt','utf8')+'</h1><a href="'+base+'home/">Home</a>');`);
   git(f.sourceDir,'add','razetag');git(f.sourceDir,'commit','-m','compiled source');git(f.sourceDir,'push','origin','main');
+  return {...f,appDir};
+}
+test('compiled app publishes freshly built HTML and preserves another app staging',async()=>{
+  const f=await compiledSource(),appDir=f.appDir;
   await writeFile(join(appDir,'policy.txt'),'Fresh compiled policy');await change(f,'razestore','Other staged work');git(f.sourceDir,'add','razestore/privacy.html');const staging=git(f.sourceDir,'diff','--cached');
   const result=await run(f);assert.equal(result.publication.status,'published');assert.equal(git(f.sourceDir,'diff','--cached'),staging);
   assert.match(git(f.root,'--git-dir',f.publicRemote,'show','main:public/razetag/privacy/index.html'),/Fresh compiled policy/);
   assert.doesNotMatch(git(f.root,'--git-dir',f.sourceRemote,'ls-tree','-r','--name-only','main'),/dist\//);
+});
+
+for(const when of [1,2]) test(`compiled source build ${when} cannot push commits from another app`,async()=>{
+  const f=await compiledSource(),before=remoteHead(f,f.sourceRemote),publicBefore=remoteHead(f,f.publicRemote);
+  await writeFile(join(f.appDir,'.gitignore'),'dist/\nnode_modules/\n.build-number\n');
+  const build=await readFile(join(f.appDir,'build.mjs'),'utf8');
+  await writeFile(join(f.appDir,'build.mjs'),build+`import {execFileSync as buildGit} from 'node:child_process';const count=Number(await readFile('.build-number','utf8').catch(()=>0))+1;await writeFile('.build-number',String(count));if(count===${when}){await writeFile('../razestore/README.md','Other app private draft committed by build');buildGit('git',['add','razestore/README.md'],{cwd:'..'});buildGit('git',['commit','--only','-m','build changed other app','--','razestore/README.md'],{cwd:'..'});}`);
+  await writeFile(join(f.appDir,'policy.txt'),'New compiled policy');
+  await assert.rejects(run(f),/source.*(?:changed|outside)|outside.*selected/i);
+  assert.equal(remoteHead(f,f.sourceRemote),before);assert.equal(remoteHead(f,f.publicRemote),publicBefore);
 });

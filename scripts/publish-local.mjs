@@ -68,15 +68,19 @@ export async function publishLocal({repoDir,sourceDir,slug,message,sitePath='.',
   if(source(['merge-base','--is-ancestor','origin/main','HEAD'],{allowFailure:true}).code!==0) throw new Error('Source main is behind or diverged from GitHub. Pull/reconcile it before publishing; local edits are preserved.');
   if(outsideSelected('origin/main','HEAD')) throw new Error('Unpushed commits outside the selected app. Review and push repository changes separately before publishing.');
 
+  const sourceBefore=source(['rev-parse','HEAD']).out;
   log(`Validating ${app.name} and the combined RazeDev site...`);
   await importSite({repoDir,sourceDir:await prepareSite({siteDir,registry,app}),slug});await buildSite({repoDir});
-  const sourceBefore=source(['rev-parse','HEAD']).out;
+  if(source(['rev-parse','HEAD']).out!==sourceBefore) throw new Error('Source HEAD changed during website build; nothing was pushed.');
   source(['add','-u','--',sitePath]);if(manifest.length)source(['add','-A','--',...manifest]);
   if(source(['diff','--cached','--name-only','--',sitePath]).out) source(['commit','--only','-m',commitMessage,'--',sitePath]);
   if(outsideSelected(sourceBefore,'HEAD')) throw new Error('Source commit changed files outside the selected app; nothing was pushed.');
   if(selectedStatus()) throw new Error('Source changed during the commit. Review the remaining changes and rerun; nothing was pushed.');
   // Hooks may change the committed website, so validate the resulting files too.
+  const committedSource=source(['rev-parse','HEAD']).out;
   await importSite({repoDir,sourceDir:await prepareSite({siteDir,registry,app}),slug});await buildSite({repoDir});
+  if(source(['rev-parse','HEAD']).out!==committedSource) throw new Error('Source HEAD changed during website build; nothing was pushed.');
+  if(outsideSelected('origin/main','HEAD')) throw new Error('Source changed outside the selected app during validation; nothing was pushed.');
   if(selectedStatus()) throw new Error('Source changed during validation. Review and rerun; nothing was pushed.');
 
   log(`Pushing ${app.name} source main...`);
