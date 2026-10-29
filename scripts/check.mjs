@@ -61,12 +61,12 @@ try {
     });
     if(registry.apps.some(app=>app.slug==='razecrack')) await check('razecrack-hydration-menu-and-screen-preview',async()=>{
       await page.goto(`${server.url}razecrack/home/`);
-      await page.getByRole('button',{name:'Your Library',exact:true}).click();
-      assert.equal(await page.getByRole('button',{name:'Your Library',exact:true}).getAttribute('aria-pressed'),'true');
+      await page.getByRole('button',{name:'Library grid',exact:true}).click();
+      assert.equal(await page.getByRole('button',{name:'Library grid',exact:true}).getAttribute('aria-pressed'),'true');
       assert.match(await page.locator('.device-screen img:visible').getAttribute('src'),/app-library.png/);
       await page.setViewportSize({width:390,height:844});await page.getByRole('button',{name:'Menu',exact:true}).click();
       await page.getByRole('navigation',{name:'Main navigation',exact:true}).getByRole('link',{name:'Privacy',exact:true}).click();
-      await page.waitForURL('**/razecrack/privacy/');assert.match(await page.locator('main').innerText(),/Pre-release policy/);
+      await page.waitForURL('**/razecrack/privacy/');assert.match(await page.locator('main').innerText(),/Privacy Policy/);
     });
     await ctx.close();
     const profiles=[{name:'desktop',width:1440,height:1000},{name:'tablet',width:768,height:1024},{name:'mobile',width:390,height:844},{name:'small-mobile',width:320,height:740},{name:'text-200',width:390,height:844,scale:2}];
@@ -88,7 +88,7 @@ try {
       try{const p=await c.newPage();await p.goto(server.url);for(const app of registry.apps){await p.goto(server.url);await p.getByRole('link',{name:`Explore ${app.name}`,exact:true}).click();assert.equal(new URL(p.url()).pathname,`/razedev/${app.slug}/home/`);await imageCheck(p);}
         if(registry.apps.some(app=>app.slug==='razecrack')) for(const route of ['home','privacy','guide','contact']) {
           await p.goto(`${server.url}razecrack/${route}/`);assert.equal(await p.locator('main h1').count(),1);
-          if(route==='privacy')assert.match(await p.locator('main').innerText(),/Pre-release policy/);
+          if(route==='privacy')assert.match(await p.locator('main').innerText(),/Privacy Policy/);
         }
         await p.goto(`${server.url}razestore/home/`);assert.equal(await p.locator('noscript a').count(),4);await p.locator('.nav-links a').filter({hasText:'Privacy'}).click();assert.equal(new URL(p.url()).pathname,'/razedev/razestore/privacy/');
       }finally{await c.close();}

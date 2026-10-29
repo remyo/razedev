@@ -158,7 +158,10 @@
         "images/app-downloads.png",
         "images/app-home.png",
         "images/app-icon.png",
-        "images/app-library.png"
+        "images/app-library.png",
+        "images/app-library-list.png",
+        "images/app-library-filter.png",
+        "images/app-rename-video.png"
       ]
     }
   ]
